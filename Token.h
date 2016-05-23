@@ -8,4 +8,6 @@ enum class kTokenType {
 struct Token {
     kTokenType type;
     std::string value;
+    
+    Token(kTokenType type, const std::string &value): type(type), value(value) { }
 };
