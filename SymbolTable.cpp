@@ -1,6 +1,6 @@
 #include "SymbolTable.h"
 
-ExpressionPtr SymbolTable::get(const std::string &identifier) {
+SymbolTable::ExpressionPtr SymbolTable::get(const std::string &identifier) {
     return symbols_[identifier];
 }
 
