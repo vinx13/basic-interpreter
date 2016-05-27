@@ -2,19 +2,67 @@
 #include "Expression.h"
 #include "Basic.h"
 #include "Exception.h"
-/*
- * Implementation notes: the Expression class
- * ------------------------------------------
- * The Expression class declares no instance variables and needs no code.
- */
 
-Expression::Expression() {
-   /* Empty */
+
+ExpressionPtr Expressions::parse(TokenStream &ts) {
+    auto lhs = parsePrimary(ts);
+    return parseBinary(ts, lhs, 0);
 }
 
-Expression::~Expression() {
-   /* Empty */
+ExpressionPtr Expressions::parseBinary(TokenStream &ts, ExpressionPtr lhs, int precedence) {
+    while (true) {
+        auto token = ts.peek();
+        if (!token || token->type != kTokenType::Operator) {
+            return lhs; // no more tokens
+        }
+        ts.read(); // token is an operator, so it should be retrived from TokenStream
+
+        int token_prec = getPrecedence(token), next_prec;
+        if (token_prec < precedence) {
+            return lhs;
+        }
+        auto rhs = parsePrimary(ts);
+        auto next = ts.peek();
+        if (next && next->type == kTokenType::Operator &&
+            (next_prec = getPrecedence(next)) > token_prec) {
+            //next token is an operator with higher precedence
+            ts.read();
+            rhs = parseBinary(ts, rhs, next_prec);
+        }
+        lhs = std::make_shared<CompoundExp>(token->value, lhs, rhs);
+    }
 }
+
+
+ExpressionPtr Expressions::parsePrimary(TokenStream &ts) {
+    auto token = ts.read();
+    if (!token) {
+        return std::shared_ptr<Expression>();
+    }
+    if (token->type == kTokenType::Number) {
+        return std::make_shared<ConstantExp>(std::stoi(token->value));
+    }
+    if (token->type == kTokenType::Symbol) {
+        return std::make_shared<IdentifierExp>(token->value);
+    }
+    if (token->type == kTokenType::Bracket && token->value == "(") {
+        auto exp = parse(ts);
+        token = ts.read(kTokenType::Bracket);
+        if (token->value != ")") {
+            throw SyntaxErrorException(); // empty expression in brackets or brackets do not match
+        }
+        return exp;
+    }
+    throw SyntaxErrorException();
+}
+
+int Expressions::getPrecedence(const std::shared_ptr<Token> token) {
+    if (token->type != kTokenType::Operator) return 0;
+    if (token->value == "+" || token->value == "-") return 1;
+    if (token->value == "*" || token->value == "/") return 2;
+    return 0;
+}
+
 
 /*
  * Implementation notes: the ConstantExp subclass
@@ -25,24 +73,18 @@ Expression::~Expression() {
  */
 
 ConstantExp::ConstantExp(int value) {
-   this->value = value;
+    this->value = value;
 }
 
-int ConstantExp::eval() {
-   return value;
+int ConstantExp::eval() const {
+    return value;
 }
 
-std::string ConstantExp::toString() {
-    return std::to_string(value);
+
+kExpressionType ConstantExp::getType() const {
+    return kExpressionType::Constant;
 }
 
-kExpressionType ConstantExp::getType() {
-   return kExpressionType::Constant;
-}
-
-int ConstantExp::getValue() {
-   return value;
-}
 
 /*
  * Implementation notes: the IdentifierExp subclass
@@ -52,29 +94,22 @@ int ConstantExp::getValue() {
  * look this variable up in the evaluation state.
  */
 
-IdentifierExp::IdentifierExp(std::string name):name(name) {
+IdentifierExp::IdentifierExp(const std::string &name) : name(name) {
 }
 
-int IdentifierExp::eval() {
+int IdentifierExp::eval() const {
     auto st = Basic::getInstance()->getSymbolTable();
     auto exp = st->get(name);
-    if(!exp) {
-        //TODO
+    if (!exp) {
+        throw VariableNotDefinedException();
     }
     return exp->eval();
 }
 
-std::string IdentifierExp::toString() {
-   return name;
+kExpressionType IdentifierExp::getType() const {
+    return kExpressionType::Identifier;
 }
 
-kExpressionType IdentifierExp::getType() {
-   return kExpressionType::Identifier;
-}
-
-std::string IdentifierExp::getName() {
-   return name;
-}
 
 /*
  * Implementation notes: the CompoundExp subclass
@@ -84,46 +119,24 @@ std::string IdentifierExp::getName() {
  * evaluates the subexpressions recursively and then applies the operator.
  */
 
-CompoundExp::CompoundExp(std::string op, std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs) :
-    op(op), lhs(lhs), rhs(rhs) {
+CompoundExp::CompoundExp(const std::string &op,
+                         const std::shared_ptr<Expression> lhs,
+                         const std::shared_ptr<Expression> rhs) :
+        op(op), lhs(lhs), rhs(rhs) {
 }
 
 
-int CompoundExp::eval() {
-/*   if (op == "=") {
-      if (lhs->getType() != kExpressionType::Identifier) {
-        //TODO
-      }
-      int val = rhs->eval(state);
-      state.setValue(((IdentifierExp *) lhs)->getName(), val);
-      return val;
-   }*/
-   int left = lhs->eval();
-   int right = rhs->eval();
-   if (op == "+") return left + right;
-   if (op == "-") return left - right;
-   if (op == "*") return left * right;
-   if (op == "/") return left / right;
-   throw SyntaxErrorException();
-   return 0;
+int CompoundExp::eval() const {
+    int left = lhs->eval();
+    int right = rhs->eval();
+    if (op == "+") return left + right;
+    if (op == "-") return left - right;
+    if (op == "*") return left * right;
+    if (op == "/") return left / right;
+    throw SyntaxErrorException();
+    return 0;
 }
 
-std::string CompoundExp::toString() {
-   return '(' + lhs->toString() + ' ' + op + ' ' + rhs->toString() + ')';
-}
-
-kExpressionType CompoundExp::getType() {
-   return kExpressionType::Compound;
-}
-
-std::string CompoundExp::getOp() {
-   return op;
-}
-
-ExpressionPtr CompoundExp::getLHS() {
-   return lhs;
-}
-
-ExpressionPtr CompoundExp::getRHS() {
-   return rhs;
+kExpressionType CompoundExp::getType() const {
+    return kExpressionType::Compound;
 }

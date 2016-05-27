@@ -7,8 +7,10 @@
 #ifndef _BASIC_EXPRESSION
 #define _BASIC_EXPRESSION
 
+
 #include <string>
 #include <memory>
+#include "TokenStream.h"
 
 /*
  * Type: kExpressionType
@@ -17,11 +19,14 @@
  * expression types: Constant, Identifier, and Compound.
  */
 
-enum class kExpressionType { Constant, Identifier, Compound };
+enum class kExpressionType {
+    Constant, Identifier, Compound
+};
 
 class Expression;
 
 using ExpressionPtr = std::shared_ptr<Expression>;
+
 /*
  * Class: Expression
  * -----------------
@@ -38,65 +43,39 @@ using ExpressionPtr = std::shared_ptr<Expression>;
  * The Expression class defines the interface common to all
  * Expression objects; each subclass provides its own specific
  * implementation of the common interface.
- *
- * Note on syntax: Each of the virtual methods in the Expression
- * class is marked with the designation = 0 on the prototype line.
- * This notation is used in C++ to indicate that this method is
- * purely virtual and will always be supplied by the subclass.
  */
+
+
+class Expressions {
+public:
+
+    // Parse an expression from given TokenStream
+    static ExpressionPtr parse(TokenStream &ts);
+
+    // Parse a primary expression
+    // number | symbol | '(' expression ')'
+    static ExpressionPtr parsePrimary(TokenStream &ts);
+
+    // Parse a compound expression with given lhs
+    // (binary_operator expression) *
+    static ExpressionPtr parseBinary(TokenStream &ts, ExpressionPtr lhs, int precedence);
+
+    // Get precedence of given operator, return 0 if the given token is not an operator
+    static int getPrecedence(const std::shared_ptr<Token> token);
+};
+
 
 class Expression {
 
 public:
 
-/*
- * Constructor: Expression
- * -----------------------
- * The base class constructor is empty.  Each subclass must provide
- * its own constructor.
- */
+    virtual ~Expression() { }
 
-   Expression();
+    // Evaluates this expression and returns its value
+    virtual int eval() const = 0;
 
-/*
- * Destructor: ~Expression
- * Usage: delete exp;
- * ------------------
- * The destructor deallocates the storage for this expression.
- * It must be declared virtual to ensure that the correct subclass
- * destructor is called when deleting an expression.
- */
-
-   virtual ~Expression();
-
-/*
- * Method: eval
- * Usage: int value = exp->eval();
- * ------------------------------------
- * Evaluates this expression and returns its value in the context of
- * the specified EvalState object.
- */
-
-   virtual int eval() = 0;
-
-/*
- * Method: toString
- * Usage: string str = exp->toString();
- * ------------------------------------
- * Returns a string representation of this expression.
- */
-
-   virtual std::string toString() = 0;
-
-/*
- * Method: type
- * Usage: ExpressionType type = exp->getType();
- * --------------------------------------------
- * Returns the type of the expression, which must be one of the constants
- * CONSTANT, IDENTIFIER, or COMPOUND.
- */
-
-   virtual kExpressionType getType() = 0;
+    // Returns the type of the expression
+    virtual kExpressionType getType() const = 0;
 
 };
 
@@ -106,7 +85,7 @@ public:
  * This subclass represents a constant integer expression.
  */
 
-class ConstantExp: public Expression {
+class ConstantExp : public Expression {
 
 public:
 
@@ -118,32 +97,15 @@ public:
  * to the given value.
  */
 
-   ConstantExp(int value);
+    ConstantExp(int value);
 
-/*
- * Prototypes for the virtual methods
- * ----------------------------------
- * These methods have the same prototypes as those in the Expression
- * base class and don't require additional documentation.
- */
+    virtual int eval() const;
 
-   virtual int eval();
-   virtual std::string toString();
-   virtual kExpressionType getType();
-
-/*
- * Method: getValue
- * Usage: int value = ((ConstantExp *) exp)->getValue();
- * -----------------------------------------------------
- * Returns the value field without calling eval and can be applied
- * only to an object known to be a ConstantExp.
- */
-
-   int getValue();
+    virtual kExpressionType getType() const;
 
 private:
 
-   int value;
+    int value;
 
 };
 
@@ -165,33 +127,17 @@ public:
  * for the variable named by name.
  */
 
-   IdentifierExp(std::string name);
+    IdentifierExp(const std::string &name);
 
-/*
- * Prototypes for the virtual methods
- * ----------------------------------
- * These methods have the same prototypes as those in the Expression
- * base class and don't require additional documentation.
- */
+    virtual int eval() const;
 
-   virtual int eval();
-   virtual std::string toString();
-   virtual kExpressionType getType();
-
-/*
- * Method: getName
- * Usage: string name = ((IdentifierExp *) exp)->getName();
- * --------------------------------------------------------
- * Returns the name field of the identifier node and can be applied only
- * to an object known to be an IdentifierExp.
- */
-
-   std::string getName();
+    virtual kExpressionType getType() const;
 
 private:
 
-   std::string name;
+    std::string name;
 
+    std::string getName() const;
 };
 
 /*
@@ -201,52 +147,30 @@ private:
  * two subexpressions joined by an operator.
  */
 
-class CompoundExp: public Expression {
+class CompoundExp : public Expression {
 
 public:
 
 /*
  * Constructor: CompoundExp
- * Usage: Expression *exp = new CompoundExp(op, lhs, rhs);
  * -------------------------------------------------------
  * The constructor initializes a new compound expression
  * which is composed of the operator (op) and the left and
  * right subexpression (lhs and rhs).
  */
 
-   CompoundExp(std::string op, ExpressionPtr lhs, ExpressionPtr rhs);
+    CompoundExp(const std::string &op, const ExpressionPtr lhs, const ExpressionPtr rhs);
 
-/*
- * Prototypes for the virtual methods
- * ----------------------------------
- * These methods have the same prototypes as those in the Expression
- * base class and don't require additional documentation.
- */
+    virtual int eval() const;
 
-   virtual ~CompoundExp();
-   virtual int eval();
-   virtual std::string toString();
-   virtual kExpressionType getType();
-
-/*
- * Methods: getOp, getLHS, getRHS
- * Usage: string op = ((CompoundExp *) exp)->getOp();
- *        Expression *lhs = ((CompoundExp *) exp)->getLHS();
- *        Expression *rhs = ((CompoundExp *) exp)->getRHS();
- * ---------------------------------------------------------
- * These methods return the components of a compound node and can
- * be applied only to an object known to be a CompoundExp.
- */
-
-   std::string getOp();
-   ExpressionPtr getLHS();
-   ExpressionPtr getRHS();
+    virtual kExpressionType getType() const;
 
 private:
 
-   std::string op;
-   std::shared_ptr<Expression> lhs, rhs;
+    std::string op;
+    std::shared_ptr<Expression> lhs, rhs;
 
 };
+
 
 #endif
