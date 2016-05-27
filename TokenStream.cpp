@@ -28,7 +28,7 @@ std::string TokenStream::getString() const {
 std::shared_ptr<Token> TokenStream::read(kTokenType expect) {
     auto token = token_;
     scanNext();
-    if(expect != token->type) {
+    if(!token || expect != token->type) {
         throw SyntaxErrorException();
     }
     return token;
@@ -90,12 +90,12 @@ bool TokenStream::isCommand(const std::string &word) const {
     static const std::string commands[] = {
         "RUN", "LIST", "CLEAR", "QUIT", "HELP"
     };
-    return std::find(std::begin(commands), std::end(commands), word) == std::end(commands);
+    return std::find(std::begin(commands), std::end(commands), word) != std::end(commands);
 }
 
 bool TokenStream::isKeyword(const std::string &word) const {
     static const std::string keywords[] = {
         "REM", "LET", "PRINT", "INPUT", "END", "GOTO", "IF", "THEN"
     };
-    return std::find(std::begin(keywords), std::end(keywords), word) == std::end(keywords);
+    return std::find(std::begin(keywords), std::end(keywords), word) != std::end(keywords);
 }
