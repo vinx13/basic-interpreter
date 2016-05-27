@@ -8,8 +8,11 @@
 #include "TokenStream.h"
 #include "Program.h"
 
+using CmdHandler = std::function<void()>;
+
 class Basic {
 public:
+    
     static std::shared_ptr<Basic> getInstance() { return instance__; }
 
     void run();
@@ -19,17 +22,21 @@ public:
     std::shared_ptr<Program> getProgram() { return program_; }
 
 private:
-    Basic() { }
+    static std::shared_ptr<Basic> instance__;
+    
+    Basic();
+
     void processLine(const std::string &line);
     
     void handleCommand(const std::string &command);
 
-    std::shared_ptr<Basic> instance__;
+    void printHelp() const;
 
     std::shared_ptr<Program> program_;
     std::shared_ptr<SymbolTable> symbols_;
     
-    std::map<std::string, std::function<void()> > command_handlers_;
+    std::map<std::string, CmdHandler > command_handlers_;
 };
        
+
 #endif
