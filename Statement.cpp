@@ -33,7 +33,7 @@ std::map<std::string, ParserFunc> Statements::parsers__ {
         "INPUT",
         [](TokenStream &ts) {
             auto var = ts.read(kTokenType::Symbol);
-            return std::make_shared<InputStatement>(var);
+            return std::make_shared<InputStatement>(var->value);
         }
     },
     {
@@ -46,7 +46,7 @@ std::map<std::string, ParserFunc> Statements::parsers__ {
         "GOTO",
         [](TokenStream &ts) {
             auto lineno = ts.read(kTokenType::Number);
-            return std::make_shared<GotoStatement>(lineno->value);
+            return std::make_shared<GotoStatement>(std::stoi(lineno->value));
         } 
     },
     {
@@ -60,7 +60,7 @@ std::map<std::string, ParserFunc> Statements::parsers__ {
                 throw SyntaxErrorException();
             }
             auto lineno = ts.read(kTokenType::Number);
-            return std::make_shared<IfStatement>(exp1, cmp->value, exp2, lineno->value);
+            return std::make_shared<IfStatement>(exp1, cmp->value, exp2, std::stoi(lineno->value));
         }
     }
 };
@@ -80,12 +80,12 @@ void InputStatement::execute() {
     std::string line;
     std::getline(std::cin, line);
     TokenStream ts(line);
-    auto exp = Expression::parse(ts);
+    auto exp = Expressions::parse(ts);
     Basic::getInstance()->getSymbolTable()->set(var_, exp);
 }
 
 void PrintStatement::execute() {
-    std::cout << exp_->toString() << std::endl;
+    std::cout << std::to_string(exp_->eval()) << std::endl;
 }
 
 void EndStatement::execute() {

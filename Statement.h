@@ -14,6 +14,7 @@
 
 
 class Statement;
+
 using StatementPtr = std::shared_ptr<Statement>;
 using ParserFunc = std::function<StatementPtr(TokenStream &)>;
 
@@ -41,21 +42,21 @@ public:
 
     // Execute this statement
     virtual void execute() = 0;
-    
+
 };
 
 
-class RemStatement: public Statement {
+class RemStatement : public Statement {
 public:
 
     virtual void execute() { }
 };
 
 
-class LetStatement: public Statement {
+class LetStatement : public Statement {
 public:
 
-    LetStatement(const std::string &identifier, std::shared_ptr<Expression> exp) :var_(identifier), exp_(exp) {  }
+    LetStatement(const std::string &identifier, std::shared_ptr<Expression> exp) : var_(identifier), exp_(exp) { }
 
     virtual void execute();
 
@@ -65,10 +66,10 @@ private:
 };
 
 
-class InputStatement: public Statement {
+class InputStatement : public Statement {
 public:
 
-    InputStatement(const std::string &identifier): var_(identifier) {  }
+    InputStatement(const std::string &identifier) : var_(identifier) { }
 
     virtual void execute();
 
@@ -77,10 +78,10 @@ private:
 };
 
 
-class PrintStatement: public Statement {
+class PrintStatement : public Statement {
 public:
 
-    PrintStatement(ExpressionPtr exp): exp_(exp) {  }
+    PrintStatement(ExpressionPtr exp) : exp_(exp) { }
 
     virtual void execute();
 
@@ -89,17 +90,17 @@ private:
 };
 
 
-class EndStatement: public Statement {
+class EndStatement : public Statement {
 public:
 
     virtual void execute();
 };
 
 
-class GotoStatement: public Statement {
+class GotoStatement : public Statement {
 public:
 
-    GotoStatement(int lineno): lineno_(lineno) {  }
+    GotoStatement(int lineno) : lineno_(lineno) { }
 
     virtual void execute();
 
@@ -108,11 +109,11 @@ private:
 };
 
 
-class IfStatement: public Statement {
+class IfStatement : public Statement {
 public:
 
-    IfStatement(const ExpressionPtr exp1, const ExpressionPtr exp2, const std::string &cmp, int lineno):
-        exp1_(exp1), exp2_(exp2), cmp_(cmp), lineno_(lineno) {  }
+    IfStatement(const ExpressionPtr exp1, const std::string &cmp, const ExpressionPtr exp2, int lineno) :
+            exp1_(exp1), cmp_(cmp), exp2_(exp2), lineno_(lineno) { }
 
     virtual void execute();
 
