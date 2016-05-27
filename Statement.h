@@ -1,12 +1,5 @@
 /*
- * File: statement.h
- * -----------------
- * This file defines the Statement abstract type.  In
- * the finished version, this file will also specify subclasses
- * for each of the statement types.  As you design your own
- * version of this class, you should pay careful attention to
- * the exp.h interface specified in Chapter 17, which is an
- * excellent model for the Statement class hierarchy.
+ * This file defines the Statement abstract type.
  */
 
 #ifndef _BASIC_STATEMENT
@@ -32,13 +25,15 @@ class Statement {
 
 public:
 
+    // Read and parse Statement from given TokenStream, 
+    // SyntaxErrorException will be raised if failure
     static StatementPtr parse(TokenStream &ts);
 
     virtual ~Statement() { }
 
     // Execute this statement
     virtual void execute() = 0;
-
+    
 private:
     static std::map<std::string, ParserFunc> parsers__;
 };

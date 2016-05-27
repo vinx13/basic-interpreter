@@ -1,12 +1,3 @@
-/*
- * File: statement.cpp
- * -------------------
- * This file implements the constructor and destructor for
- * the Statement class itself.  Your implementation must do
- * the same for the subclasses you define for each of the
- * BASIC statements.
- */
-
 #include <string>
 #include <iostream>
 #include <utility>
@@ -28,7 +19,7 @@ std::map<std::string, ParserFunc> Statement::parsers__ {
         [](TokenStream &ts) {
             auto var = ts.read(kTokenType::Symbol);
             auto exp = Expression::parse(ts);
-            return std::make_shared<LetStatement>(var->value, exp);
+            return  std::make_shared<LetStatement>(var->value, exp);
         }
     },
     {
