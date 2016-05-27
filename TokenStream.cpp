@@ -21,6 +21,10 @@ std::shared_ptr<Token> TokenStream::read() {
     return token;
 }
 
+std::string TokenStream::getString() const {
+    return src_;
+}
+
 std::shared_ptr<Token> TokenStream::read(kTokenType expect) {
     auto token = token_;
     scanNext();

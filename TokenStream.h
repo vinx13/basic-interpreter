@@ -22,7 +22,9 @@ public:
     
     // Get current token without updating the cursor
     std::shared_ptr<Token> peek() const;
-    
+
+    // Get the string being read from
+    std::string getString() const;
 private:
 
     void reset();
