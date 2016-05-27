@@ -16,3 +16,7 @@ bool SymbolTable::remove(const std::string &identifier) {
     symbols_.erase(iter);
     return true;
 }
+
+void SymbolTable::clear() {
+    symbols_.clear();
+}

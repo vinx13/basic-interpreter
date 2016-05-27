@@ -1,3 +1,7 @@
+#ifndef _BASIC_SYMBOLTABLE
+#define _BASIC_SYMBOLTABLE
+
+
 #include <string>
 #include <map>
 #include <memory>
@@ -17,6 +21,13 @@ public:
     // Remove the value of specified identifier, return true if the identifier exists
     bool remove(const std::string &identifier);
 
+    // Clear all symbols
+    void clear();
+
 private:
     std::map<std::string, ExpressionPtr> symbols_;
 };
+
+
+#endif
+
