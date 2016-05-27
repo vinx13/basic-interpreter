@@ -15,55 +15,32 @@
 
 #include <string>
 #include <memory>
+#include <map>
+#include <functional>
 #include "Expression.h"
 
-/*
- * Class: Statement
- * ----------------
- * This class is used to represent a statement in a program.
- * The model for this class is Expression in the exp.h interface.
- * Like Expression, Statement is an abstract class with subclasses
- * for each of the statement and command types required for the
- * BASIC interpreter.
- */
 
+class Statement;
+using StatementPtr = std::shared_ptr<Statement>;
+using ParserFunc = std::function<StatementPtr(TokenStream &)>;
+
+
+/*
+ * Base of classes representating control statement of sequencial statement in BASIC
+ */
 class Statement {
 
 public:
 
-/*
- * Constructor: Statement
- * ----------------------
- * The base class constructor is empty.  Each subclass must provide
- * its own constructor.
- */
+    static StatementPtr parse(TokenStream &ts);
 
-   Statement();
+    virtual ~Statement() { }
 
-/*
- * Destructor: ~Statement
- * Usage: delete stmt;
- * -------------------
- * The destructor deallocates the storage for this expression.
- * It must be declared virtual to ensure that the correct subclass
- * destructor is called when deleting a statement.
- */
+    // Execute this statement
+    virtual void execute() = 0;
 
-   virtual ~Statement();
-
-/*
- * Method: execute
- * Usage: stmt->execute(state);
- * ----------------------------
- * This method executes a BASIC statement.  Each of the subclasses
- * defines its own execute method that implements the necessary
- * operations.  As was true for the expression evaluator, this
- * method takes an EvalState object for looking up variables or
- * controlling the operation of the interpreter.
- */
-
-   virtual void execute() = 0;
-
+private:
+    static std::map<std::string, ParserFunc> parsers__;
 };
 
 class RemStatement: public Statement {
@@ -81,7 +58,7 @@ public:
 
 private:
     std::string var_;
-    std::shared_ptr<Expression> exp_;
+    const ExpressionPtr exp_;
 };
 
 class InputStatement: public Statement {
@@ -98,12 +75,12 @@ private:
 class PrintStatement: public Statement {
 public:
 
-    PrintStatement(std::shared_ptr<Expression> exp): exp_(exp) {  }
+    PrintStatement(ExpressionPtr exp): exp_(exp) {  }
 
     virtual void execute();
 
 private:
-    std::shared_ptr<Expression> exp_;
+    const ExpressionPtr exp_;
 };
 
 class EndStatement: public Statement {
@@ -126,14 +103,14 @@ private:
 class IfStatement: public Statement {
 public:
 
-    IfStatement(const std::shared_ptr<Expression> exp1, const std::shared_ptr<Expression> exp2, char cmp, int lineno):
+    IfStatement(const ExpressionPtr exp1, const ExpressionPtr exp2, const std::string &cmp, int lineno):
         exp1_(exp1), exp2_(exp2), cmp_(cmp), lineno_(lineno) {  }
 
     virtual void execute();
 
 private:
-    const std::shared_ptr<Expression> exp1_, exp2_;
-    const char cmp_;
+    const ExpressionPtr exp1_, exp2_;
+    const std::string cmp_;
     const int lineno_;
 };
 
