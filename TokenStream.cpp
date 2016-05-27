@@ -1,7 +1,7 @@
 #include <cctype>
 #include <algorithm>
-#include "Exception"
-#include "TokenStream.cpp"
+#include "Exception.h"
+#include "TokenStream.h"
 
 TokenStream::TokenStream(const std::string &line) {
     setInput(line);
@@ -18,6 +18,15 @@ void TokenStream::setInput(const std::string &line){
 std::shared_ptr<Token> TokenStream::read() {
     auto token = token_;
     scanNext();
+    return token;
+}
+
+std::shared_ptr<Token> TokenStream::read(kTokenType expect) {
+    auto token = token_;
+    scanNext();
+    if(expect != token->type) {
+        throw SyntaxErrorException();
+    }
     return token;
 }
 
@@ -57,15 +66,15 @@ void TokenStream::scanNext() {
     }
     switch(*cur_){
         case '+': case '-': case '*': case '/': 
-            token_ = std::make_shared<Token>(kTokenType::Operator, cur_, cur_ + 1);
+            token_ = std::make_shared<Token>(kTokenType::Operator, std::string(cur_, cur_ + 1));
             ++cur_;
             return;
         case '(': case ')':
-            token_ = std::make_shared<Token>(kTokenType::Bracket, cur_, cur_ + 1);
+            token_ = std::make_shared<Token>(kTokenType::Bracket, std::string(cur_, cur_ + 1));
             ++cur_;
             return;
         case '<': case '>': case '=':
-            token_ = std::make_shared<Token>(kTokenType::Compare, cur_, cur_ + 1);
+            token_ = std::make_shared<Token>(kTokenType::Compare, std::string(cur_, cur_ + 1));
             ++cur_;
             return;
     }
@@ -74,14 +83,14 @@ void TokenStream::scanNext() {
 }
 
 bool TokenStream::isCommand(const std::string &word) const {
-    const std::string commands = {
+    static const std::string commands[] = {
         "RUN", "LIST", "CLEAR", "QUIT", "HELP"
     };
     return std::find(std::begin(commands), std::end(commands), word) == std::end(commands);
 }
 
 bool TokenStream::isKeyword(const std::string &word) const {
-    const std::string keywords = {
+    static const std::string keywords[] = {
         "REM", "LET", "PRINT", "INPUT", "END", "GOTO", "IF", "THEN"
     };
     return std::find(std::begin(keywords), std::end(keywords), word) == std::end(keywords);

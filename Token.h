@@ -1,3 +1,7 @@
+#ifndef _BASIC_TOKEN
+#define _BASIC_TOKEN
+
+
 #include <string>
 
 enum class kTokenType {
@@ -11,3 +15,6 @@ struct Token {
     
     Token(kTokenType type, const std::string &value): type(type), value(value) { }
 };
+
+
+#endif

@@ -1,6 +1,10 @@
-#include "token.h"
+#ifndef _BASIC_TOKENSTREAM
+#define _BASIC_TOKENSTREAM
+
+
 #include <memory>
 #include <string>
+#include "token.h"
 
 class TokenStream {
 public:
@@ -11,6 +15,11 @@ public:
     // Get current token and move the cursor to next one 
     std::shared_ptr<Token> read();
 
+    // Get current token and move the cursor to next one, 
+    // if the type of current token does not match 'expect', 
+    // SyntaxErrorException will be raised after updating the cursor
+    std::shared_ptr<Token> read(kTokenType expect);
+    
     // Get current token without updating the cursor
     std::shared_ptr<Token> peek() const;
     
@@ -31,3 +40,7 @@ private:
     std::string::iterator cur_, end_;
     
 };
+
+
+#endif
+
