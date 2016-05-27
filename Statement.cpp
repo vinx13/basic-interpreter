@@ -7,7 +7,7 @@
 #include "Exception.h"
 #include "TokenStream.h"
 
-std::map<std::string, ParserFunc> Statement::parsers__ {
+std::map<std::string, ParserFunc> Statements::parsers__ {
     { 
         "REM", 
         [](TokenStream &ts) { 
@@ -18,14 +18,14 @@ std::map<std::string, ParserFunc> Statement::parsers__ {
         "LET",
         [](TokenStream &ts) {
             auto var = ts.read(kTokenType::Symbol);
-            auto exp = Expression::parse(ts);
+            auto exp = Expressions::parse(ts);
             return  std::make_shared<LetStatement>(var->value, exp);
         }
     },
     {
         "PRINT",
         [](TokenStream &ts) {
-            auto exp = Expression::parse(ts);
+            auto exp = Expressions::parse(ts);
             return std::make_shared<PrintStatement>(exp);
         }
     },
@@ -52,9 +52,9 @@ std::map<std::string, ParserFunc> Statement::parsers__ {
     {
         "IF",
         [](TokenStream &ts) {
-            auto exp1 = Expression::parse(ts);
+            auto exp1 = Expressions::parse(ts);
             auto cmp = ts.read(kTokenType::Compare);
-            auto exp2 = Expression::parse(ts);
+            auto exp2 = Expressions::parse(ts);
             auto then = ts.read(kTokenType::Command);
             if(then->value != "THEN") {
                 throw SyntaxErrorException();
@@ -66,7 +66,7 @@ std::map<std::string, ParserFunc> Statement::parsers__ {
 };
         
 
-StatementPtr Statement::parse(TokenStream &ts) {
+StatementPtr Statements::parse(TokenStream &ts) {
     auto keyword = ts.read(kTokenType::Command)->value;
     return parsers__.at(keyword)(ts);
 }

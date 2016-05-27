@@ -18,6 +18,18 @@ using StatementPtr = std::shared_ptr<Statement>;
 using ParserFunc = std::function<StatementPtr(TokenStream &)>;
 
 
+class Statements {
+public:
+
+    // Read and parse Statement from given TokenStream, 
+    // SyntaxErrorException will be raised if failure
+    static StatementPtr parse(TokenStream &ts);
+
+private:
+    static std::map<std::string, ParserFunc> parsers__;
+};
+
+
 /*
  * Base of classes representating control statement of sequencial statement in BASIC
  */
@@ -25,24 +37,20 @@ class Statement {
 
 public:
 
-    // Read and parse Statement from given TokenStream, 
-    // SyntaxErrorException will be raised if failure
-    static StatementPtr parse(TokenStream &ts);
-
     virtual ~Statement() { }
 
     // Execute this statement
     virtual void execute() = 0;
     
-private:
-    static std::map<std::string, ParserFunc> parsers__;
 };
+
 
 class RemStatement: public Statement {
 public:
 
     virtual void execute() { }
 };
+
 
 class LetStatement: public Statement {
 public:
@@ -56,6 +64,7 @@ private:
     const ExpressionPtr exp_;
 };
 
+
 class InputStatement: public Statement {
 public:
 
@@ -66,6 +75,7 @@ public:
 private:
     std::string var_;
 };
+
 
 class PrintStatement: public Statement {
 public:
@@ -78,11 +88,13 @@ private:
     const ExpressionPtr exp_;
 };
 
+
 class EndStatement: public Statement {
 public:
 
     virtual void execute();
 };
+
 
 class GotoStatement: public Statement {
 public:
@@ -94,6 +106,7 @@ public:
 private:
     int lineno_;
 };
+
 
 class IfStatement: public Statement {
 public:
@@ -109,4 +122,6 @@ private:
     const int lineno_;
 };
 
+
 #endif
+
