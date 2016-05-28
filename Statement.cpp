@@ -1,16 +1,13 @@
 #include <string>
 #include <iostream>
-#include <utility>
 #include "Statement.h"
 #include "Basic.h"
-#include "Expression.h"
 #include "Exception.h"
-#include "TokenStream.h"
 
-std::map<std::string, ParserFunc> Statements::parsers__ {
-    { 
-        "REM", 
-        [](TokenStream &ts) { 
+std::map<std::string, ParserFunc> Statements::parsers__{
+    {
+        "REM",
+        [](TokenStream &ts) {
             return std::make_shared<RemStatement>();
         }
     },
@@ -18,8 +15,13 @@ std::map<std::string, ParserFunc> Statements::parsers__ {
         "LET",
         [](TokenStream &ts) {
             auto var = ts.read(kTokenType::Symbol);
+            auto token = ts.read(kTokenType::Compare);
+            if (token->value != "=") {
+                throw SyntaxErrorException();
+            }
             auto exp = Expressions::parse(ts);
-            return  std::make_shared<LetStatement>(var->value, exp);
+            auto rhs = std::make_shared<ConstantExp>(exp->eval());
+            return std::make_shared<LetStatement>(var->value, rhs);
         }
     },
     {
@@ -47,7 +49,7 @@ std::map<std::string, ParserFunc> Statements::parsers__ {
         [](TokenStream &ts) {
             auto lineno = ts.read(kTokenType::Number);
             return std::make_shared<GotoStatement>(std::stoi(lineno->value));
-        } 
+        }
     },
     {
         "IF",
@@ -56,7 +58,7 @@ std::map<std::string, ParserFunc> Statements::parsers__ {
             auto cmp = ts.read(kTokenType::Compare);
             auto exp2 = Expressions::parse(ts);
             auto then = ts.read(kTokenType::Command);
-            if(then->value != "THEN") {
+            if (then->value != "THEN") {
                 throw SyntaxErrorException();
             }
             auto lineno = ts.read(kTokenType::Number);
@@ -64,10 +66,10 @@ std::map<std::string, ParserFunc> Statements::parsers__ {
         }
     }
 };
-        
+
 
 StatementPtr Statements::parse(TokenStream &ts) {
-    auto keyword = ts.read(kTokenType::Command)->value;
+    auto keyword = ts.read(kTokenType::Keyword)->value;
     return parsers__.at(keyword)(ts);
 }
 
@@ -76,12 +78,34 @@ void LetStatement::execute() {
 }
 
 void InputStatement::execute() {
-    std::cout << "Enter value for " << var_ << " ? ";
-    std::string line;
-    std::getline(std::cin, line);
-    TokenStream ts(line);
-    auto exp = Expressions::parse(ts);
-    Basic::getInstance()->getSymbolTable()->set(var_, exp);
+    while (true) {
+        std::cout << " ? ";
+        std::string line;
+        std::getline(std::cin, line);
+        try {
+            int value = parseNumber(line);
+            Basic::getInstance()->getSymbolTable()->set(var_, std::make_shared<ConstantExp>(value));
+            return;
+        } catch (InvalidNumberException &e) {
+            std::cout << e.what() << std::endl;
+        }
+    }
+    //TokenStream ts(line);
+    //auto exp = Expressions::parse(ts);
+    //Basic::getInstance()->getSymbolTable()->set(var_, exp);
+}
+
+int InputStatement::parseNumber(const std::string &line) const {
+    try {
+        size_t pos;
+        int value = stoi(line, &pos);
+        if (pos != line.size()) {
+            throw InvalidNumberException(); // redundant tokens after the number
+        }
+        return value;
+    } catch (std::invalid_argument &e) {
+        throw InvalidNumberException();
+    }
 }
 
 void PrintStatement::execute() {
@@ -101,7 +125,7 @@ void IfStatement::execute() {
     int value1 = exp1_->eval(),
         value2 = exp2_->eval(),
         diff = value1 - value2;
-    if( (cmp_ == "<" && diff < 0) ||
+    if ((cmp_ == "<" && diff < 0) ||
         (cmp_ == "=" && diff == 0) ||
         (cmp_ == ">" && diff > 0)) {
         Basic::getInstance()->getProgram()->jumpTo(lineno_);

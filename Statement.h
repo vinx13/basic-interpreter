@@ -75,6 +75,8 @@ public:
 
 private:
     std::string var_;
+
+    int parseNumber(const std::string &line) const;
 };
 
 
