@@ -98,11 +98,7 @@ IdentifierExp::IdentifierExp(const std::string &name) : name(name) {
 
 int IdentifierExp::eval() const {
     auto st = Basic::getInstance()->getSymbolTable();
-    auto exp = st->get(name);
-    if (!exp) {
-        throw VariableNotDefinedException();
-    }
-    return exp->eval();
+    return st->get(name);
 }
 
 kExpressionType IdentifierExp::getType() const {
