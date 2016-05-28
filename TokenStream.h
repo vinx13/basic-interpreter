@@ -41,8 +41,6 @@ private:
     std::string src_;
     std::string::iterator cur_, end_;
 
-
-
 };
 
 

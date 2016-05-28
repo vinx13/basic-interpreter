@@ -47,7 +47,7 @@ void TokenStream::scanNext() {
         return;
     }
 
-    if (isdigit(*cur_)) {
+    if (std::isdigit(*cur_)) {
         auto start = cur_;
         while (++cur_ != end_ && std::isdigit(*cur_))
             ;
