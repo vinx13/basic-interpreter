@@ -27,12 +27,12 @@ public:
     std::string getString() const;
 private:
 
-    void reset();
-
     void setInput(const std::string &line);
     
     void scanNext();
-    
+
+    void ltrim();
+
     bool isCommand(const std::string &word) const;
     
     bool isKeyword(const std::string &word) const;
@@ -40,7 +40,9 @@ private:
     std::shared_ptr<Token> token_;
     std::string src_;
     std::string::iterator cur_, end_;
-    
+
+
+
 };
 
 

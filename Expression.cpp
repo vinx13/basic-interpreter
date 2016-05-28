@@ -15,7 +15,7 @@ ExpressionPtr Expressions::parseBinary(TokenStream &ts, ExpressionPtr lhs, int p
         if (!token || token->type != kTokenType::Operator) {
             return lhs; // no more tokens
         }
-        ts.read(); // token is an operator, so it should be retrived from TokenStream
+        ts.read(); // token is an operator, so it should be retrieved from TokenStream
 
         int token_prec = getPrecedence(token), next_prec;
         if (token_prec < precedence) {

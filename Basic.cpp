@@ -41,11 +41,13 @@ Basic::Basic() : command_handlers_  {
         }
     }
 {
-    //empty constructor body
+    program_ = std::make_shared<Program>();
+    symbols_ = std::make_shared<SymbolTable>();
 }
 
 void Basic::handleCommand(const std::string &command) {
-    command_handlers_.at(command)();
+    auto &func = command_handlers_.at(command);
+    func();
 }
 
 void Basic::run() {
@@ -55,7 +57,7 @@ void Basic::run() {
             std::getline(std::cin, line);
             processLine(line);
         } catch (BasicException & e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+            std::cout << e.what() << std::endl;
         }
     }
 }
@@ -64,11 +66,20 @@ void Basic::processLine(const std::string &line) {
     TokenStream ts(line);
 
     auto token = ts.peek();
-    
-    if(token->type == kTokenType::Number) {
 
-        program_->addStatement(ts.getString()); 
-    
+    if(!token) {
+        return; //empty line
+    }
+
+    if(token->type == kTokenType::Number) {
+        // add or remove a statement
+        ts.read(); // eat line number
+        if(!ts.peek()) {
+            // no input after line number
+            program_->removeStatement(std::stoi(token->value));
+        } else {
+            program_->addStatement(ts.getString());
+        }
     } else if(token->type == kTokenType::Command) {
     
         handleCommand(token->value);
@@ -80,7 +91,7 @@ void Basic::processLine(const std::string &line) {
         if(std::find(std::begin(immediate_stmts), std::end(immediate_stmts), token->value) == std::end(immediate_stmts)){
             throw SyntaxErrorException();
         }
-        auto stmt = Statement::parse(ts);
+        auto stmt = Statements::parse(ts);
         stmt->execute();
     
     } else {
@@ -97,11 +108,5 @@ void Basic::printHelp() const {
         "QUIT -- This command exits from the BASIC interpreter by calling exit(0)\n"\
         "HELP -- This command provides a simple help message describing your interpreter\n";
     std::cout << help << std::endl;
-}
-
-int main() {
-    Basic::getInstance()->run();
-
-    return 0;
 }
 

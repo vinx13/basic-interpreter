@@ -20,8 +20,7 @@ std::map<std::string, ParserFunc> Statements::parsers__{
                 throw SyntaxErrorException();
             }
             auto exp = Expressions::parse(ts);
-            auto rhs = std::make_shared<ConstantExp>(exp->eval());
-            return std::make_shared<LetStatement>(var->value, rhs);
+            return std::make_shared<LetStatement>(var->value, exp);
         }
     },
     {
@@ -57,7 +56,7 @@ std::map<std::string, ParserFunc> Statements::parsers__{
             auto exp1 = Expressions::parse(ts);
             auto cmp = ts.read(kTokenType::Compare);
             auto exp2 = Expressions::parse(ts);
-            auto then = ts.read(kTokenType::Command);
+            auto then = ts.read(kTokenType::Keyword);
             if (then->value != "THEN") {
                 throw SyntaxErrorException();
             }
@@ -74,7 +73,7 @@ StatementPtr Statements::parse(TokenStream &ts) {
 }
 
 void LetStatement::execute() {
-    Basic::getInstance()->getSymbolTable()->set(var_, exp_);
+    Basic::getInstance()->getSymbolTable()->set(var_, exp_->eval());
 }
 
 void InputStatement::execute() {
@@ -84,7 +83,7 @@ void InputStatement::execute() {
         std::getline(std::cin, line);
         try {
             int value = parseNumber(line);
-            Basic::getInstance()->getSymbolTable()->set(var_, std::make_shared<ConstantExp>(value));
+            Basic::getInstance()->getSymbolTable()->set(var_, value);
             return;
         } catch (InvalidNumberException &e) {
             std::cout << e.what() << std::endl;
