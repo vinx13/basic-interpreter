@@ -26,8 +26,7 @@ ExpressionPtr Expressions::parseBinary(TokenStream &ts, ExpressionPtr lhs, int p
         if (next && next->type == kTokenType::Operator &&
             (next_prec = getPrecedence(next)) > token_prec) {
             //next token is an operator with higher precedence
-            ts.read();
-            rhs = parseBinary(ts, rhs, next_prec);
+            rhs = parseBinary(ts, rhs, token_prec);
         }
         lhs = std::make_shared<CompoundExp>(token->value, lhs, rhs);
     }
@@ -132,7 +131,12 @@ int CompoundExp::eval() const {
     if (op == "+") return left + right;
     if (op == "-") return left - right;
     if (op == "*") return left * right;
-    if (op == "/") return left / right;
+    if (op == "/") {
+        if( !right) {
+            throw DivideByZeroException();
+        }
+        return left / right;
+    }
     throw SyntaxErrorException();
     return 0;
 }
