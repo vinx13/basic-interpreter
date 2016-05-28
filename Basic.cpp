@@ -1,6 +1,7 @@
 #include <cctype>
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include "Basic.h"
 #include "Exception.h"
 #include "TokenStream.h"

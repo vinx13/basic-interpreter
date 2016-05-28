@@ -4,7 +4,7 @@
 
 #include <memory>
 #include <string>
-#include "token.h"
+#include "Token.h"
 
 class TokenStream {
 public:
