@@ -47,7 +47,7 @@ ExpressionPtr Expressions::parsePrimary(TokenStream &ts) {
     if (token->type == kTokenType::Bracket && token->value == "(") {
         auto exp = parse(ts);
         token = ts.read(kTokenType::Bracket);
-        if (token->value != ")") {
+        if (!exp || token->value != ")") {
             throw SyntaxErrorException(); // empty expression in brackets or brackets do not match
         }
         return exp;
